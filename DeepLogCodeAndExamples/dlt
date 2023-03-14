@@ -1,0 +1,13 @@
+# DeepLog Version 10
+#
+# Author: Stephen Muggleton, Imperial College London
+#
+# Mon 30 May 18:32:52 BST 2022
+#
+# Deeplog depends on the following additional software.
+# 	1) SWI Prolog
+
+#!/bin/tcsh
+
+dl $1
+dt $1

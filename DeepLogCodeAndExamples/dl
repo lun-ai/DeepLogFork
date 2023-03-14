@@ -1,0 +1,17 @@
+# DeepLog Version 11
+#
+# Author: Stephen Muggleton, Imperial College London
+#
+# Mon 30 May 18:32:52 BST 2022
+#
+# Deeplog depends on the following additional software.
+# 	1) SWI Prolog
+
+#!/bin/tcsh
+
+echo "=== TRAINING $1 ==="
+swipl << %
+[interpret,compile,setarith,'$1'].
+time(lminterprets(Subs)).
+%
+./clr
