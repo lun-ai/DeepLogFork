@@ -1,1 +1,1 @@
-modes([abcs04,cl,cl]).
+modes([regex,cl,cl]).
