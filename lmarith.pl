@@ -7,6 +7,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 :- [setarith,utils].
+:- ['bmlp/swipl_client.pl'].
 
 :- op(700,xfy,is_lmatrix). 		% LMatrix expression evaluation
 :- op(500,yfx,'--').			% LMatrix minus intersection
@@ -26,17 +27,21 @@ M is_lmatrix M :- !, nonvar(M), !.
 % Square of lmatrices
 
 lm_square([P,M1],[P,M2]) :- M2 is M1*2,
-	lm_prod([P,M1],[P,M1],[P,M2]), !.
+	mfname(P,M2,M2name),
+	bmlp_gpu_sq([P,M1],[P,M2]), 
+	reconsult(M2name), !.
+	% lm_prod([P,M1],[P,M1],[P,M2]), !.
 
 % lm_prod/3 - Ms is productof matrices M1,M2
 
 lm_prod([P,M1],[P,M2],[P,M3]) :- M3 is M1+M2,
 	mfname(P,M3,M3name),
-	tell(M3name),
-	pprod([P,M1],[P,M2],[P,M3]),
-	told,
-	reconsult(M3name),
-	lm_prod_trans([P,M3]), !.
+	% tell(M3name),
+	% pprod([P,M1],[P,M2],[P,M3]),
+	% told,
+	bmlp_gpu_mul([P,M1],[P,M2],[P,M3]),
+	reconsult(M3name), !.
+	% lm_prod_trans([P,M3]), !.
 
 % lm_prod_trans/1 - Generation of Transpose Matrix
 
@@ -61,6 +66,65 @@ lm_prods(P,[D|Ds],M) :-
 	lm_prods(P,Ds,M1),
 	M is_lmatrix [P,D] * M1.
 %	lm_prod([P,D],M1,M).
+
+
+% Perform the matrix power operation as a SWI-Prolog client call to Python BMLP-GPU library
+bmlp_gpu_sq([P,N1],[P,N2]) :-
+	run_python_command("import bmlp.matrix", _),
+	mfname(P,N1,Pfname1),
+	format(
+		string(C1),
+		"a = bmlp.matrix.integers_to_boolean_matrix('~w')",
+		[Pfname1]),
+	run_python_command(C1, _Res1),
+	format(
+		string(C2),
+		"b = a @ a",
+		[]),
+	run_python_command(C2, _Res2),
+	(var(N2) -> N2 is N1*2; true),
+	mfname(P,N2,Pfname2),
+	mname(P,N2,Pname2),
+	format(
+		string(C3),
+		"bmlp.matrix.boolean_matrix_to_integers(b,'~w','~w')",
+		[Pname2,Pfname2]),
+	run_python_command(C3, _Res3).
+
+
+% Perform the matrix power operation as a SWI-Prolog client call to Python BMLP-GPU library
+bmlp_gpu_mul([P,N1],[P,N2],[P,N3]) :-
+	run_python_command("import bmlp.matrix", _),
+	% Load the first matrix
+	mfname(P,N1,Pfname1),
+	format(
+		string(C1),
+		"a = bmlp.matrix.integers_to_boolean_matrix('~w')",
+		[Pfname1]),
+	run_python_command(C1, _Res1),
+	% Load the second matrix
+	mfname(P,N2,Pfname2),
+	format(
+		string(C2),
+		"b = bmlp.matrix.integers_to_boolean_matrix('~w')",
+		[Pfname2]),
+	run_python_command(C2, _Res2),
+	% Multiply the first matrix and the second matrix
+	format(
+		string(C3),
+		"c = a @ b",
+		[]),
+	run_python_command(C3, _Res3),
+	% Update the matrix Id integer to be the sum of Ids of two matrices
+	(var(N3) -> N3 is N1 + N2; true),
+	mfname(P,N3,Pfname3),
+	mname(P,N3,Pname3),
+	format(
+		string(C4),
+		"bmlp.matrix.boolean_matrix_to_integers(c,'~w','~w')",
+		[Pname3,Pfname3]),
+	run_python_command(C4, _Res4).
+
 
 % Printing product of lmatrices
 
@@ -92,12 +156,12 @@ pdiagonal([P,M],[Pu1,M]) :-
 	mname(P,M,P_M), mname(Pu1,M,Pu1_M),
 	call(P_M,X,_), lm_add_diagonal1(P_M,X,Y),
 	writes([Pu1_M,'(',X,',',Y,')','.','\n']), fail.
-pdiagonal([P,M],[Pu1,M]) :-
-	writes(['% Transpose Matrix with diagonal added','\n']),
-	mname(P,M,P_M), mname(Pu1,M,Pu1_M),
-	mname(t,P_M,TP_M), mname(t,Pu1_M,TPu1_M),
-	call(TP_M,X,_), lm_add_diagonal1(TP_M,X,Y),
-	writes([TPu1_M,'(',X,',',Y,')','.','\n']), fail.
+% pdiagonal([P,M],[Pu1,M]) :-
+% 	writes(['% Transpose Matrix with diagonal added','\n']),
+% 	mname(P,M,P_M), mname(Pu1,M,Pu1_M),
+% 	mname(t,P_M,TP_M), mname(t,Pu1_M,TPu1_M),
+% 	call(TP_M,X,_), lm_add_diagonal1(TP_M,X,Y),
+% 	writes([TPu1_M,'(',X,',',Y,')','.','\n']), fail.
 pdiagonal(_,_).
 
 % Add_diagonal into a row of the matrix

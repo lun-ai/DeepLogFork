@@ -6,15 +6,18 @@ def parse_prolog_binary_codes(path):
     
     with open(path, 'r') as prolog:
         
+        num_facts = 0
+        
         for row in prolog:
-            
-            # Get the integer representation of the bitcode
-            if '%' not in row:
-                code, length = integer_to_binary_code(int(row.split(',')[1].split(')')[0]))
+            if "%" not in row and row != "\n":
+                
+                # Get the integer representation of the bitcode
+                code, length = integer_to_binary_code(int(row.replace(" ", "").replace("\n", "").split(",")[1].strip(").")))
                 codes.append(code)
                 max_length = max(max_length, length)
+                num_facts += 1
             
-    return codes, max_length
+    return codes, max(max_length, num_facts)
 
 def integer_to_binary_code(n):
     len = n.bit_length()

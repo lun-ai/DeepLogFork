@@ -7,7 +7,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 :- [lmarith].
-:- ['bmlp/swipl_client.pl'].
 
 lmcompile(TrainTest,Depth,NCs,MinLen) :- 
 	primitives(Ps),
@@ -260,38 +259,13 @@ sqp1fixedpoint(P,Depth) :-	% First find depth of fixed point
 % 	!.
 
 fixedpoint(M1,N1,Depth) :-
-	call_bmlp_gpu(M1,M2),
+	bmlp_gpu_sq(M1,M2),
 	atomic_list_concat(M2,M2Name),
 	consult(M2Name),
-	writeln(M2Name),
 	\+(lm_submatrix(M2,M1)), N2 is N1*2,
 	fixedpoint(M2,N2,Depth), !.
 fixedpoint(_,Depth,Depth) :-
 	!.
-
-call_bmlp_gpu([P,N1],[P,N2]) :-
-	run_python_command("import bmlp.matrix", _),
-	mfname(P,N1,PName1),
-	format(
-		string(C1),
-		"a = bmlp.matrix.integers_to_boolean_matrix('~w')",
-		[PName1]),
-	run_python_command(C1, Res1),
-	writeln(Res1),
-	format(
-		string(C2),
-		"b = a @ a",
-		[]),
-	run_python_command(C2, Res2),
-	writeln(Res2),
-	N2 is N1*2,
-	mfname(P,N2,PName2),
-	format(
-		string(C3),
-		"bmlp.matrix.boolean_matrix_to_integers(b,'~w','~w')",
-		[PName2,PName2]),
-	run_python_command(C3, Res3),
-	writeln(Res3).
 
 % Compute squares of matrices without diagonal up to 2^Depth
 
