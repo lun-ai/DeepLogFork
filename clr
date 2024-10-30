@@ -9,6 +9,6 @@
 
 #!/bin/tcsh
 
-rm up[1-9]*.pl
+# rm up[1-9]*.pl
 rm tup[1-9]*.pl
 rm herbn.pl

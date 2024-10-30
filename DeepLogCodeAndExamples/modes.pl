@@ -1,1 +1,0 @@
-modes([regex,cl,cl]).
