@@ -1,4 +1,4 @@
-fire16:
+fire16 total time:
     base
         3.4424099
         3.4262385
@@ -12,3 +12,9 @@ fire16:
         3.3861404
         3.3827118
         3.390789
+
+fire16 compilation time:
+    base:
+		0.09271429999999999
+    base + BMLP-GPU:
+        0.0904542
